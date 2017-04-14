@@ -6,12 +6,44 @@ import (
 	"reflect"
 )
 
-func Conver(rType reflect.Type) types.Type {
+type Conver struct {
+	Named map[string]types.Type
+}
+
+func NewConver() *Conver {
+	return &Conver{
+		Named: make(map[string]types.Type),
+	}
+}
+
+func (c *Conver) free() {
+	c.Named = make(map[string]types.Type)
+}
+
+func (c *Conver) Conver(rType reflect.Type) types.Type {
+	defer func() {
+		c.free()
+	}()
+
+	return c.conver(rType, false)
+}
+
+func (c *Conver) conver(rType reflect.Type, named bool) (ret types.Type) {
+	rk := rType.Kind()
 	switch rType.Kind() {
 	case reflect.Bool:
-		return types.Typ[types.Bool]
+		ret = types.Typ[types.Bool]
+		if rType.String() != rk.String() {
+			ret = c.addNamed(rType.Name(), ret)
+		}
+		return
 	case reflect.Int:
-		return types.Typ[types.Int]
+		ret = types.Typ[types.Int]
+		if rType.String() != rk.String() {
+			ret = c.addNamed(rType.Name(), ret)
+		}
+		return
+
 	case reflect.Int8:
 		return types.Typ[types.Int8]
 	case reflect.Int16:
@@ -46,21 +78,52 @@ func Conver(rType reflect.Type) types.Type {
 		return types.Typ[types.UnsafePointer]
 
 	case reflect.Array:
-		return types.NewArray(Conver(rType.Elem()), int64(rType.Len()))
+		if elem := rType.Elem(); elem.Kind() == reflect.Struct {
+			if elemNamed, exist := c.Named[elem.Name()]; exist {
+				return types.NewArray(elemNamed, int64(rType.Len()))
+			}
+		}
+
+		return types.NewArray(c.conver(rType.Elem(), true), int64(rType.Len()))
 	case reflect.Slice:
-		return types.NewSlice(Conver(rType.Elem()))
+		if elem := rType.Elem(); elem.Kind() == reflect.Struct {
+			if elemNamed, exist := c.Named[elem.Name()]; exist {
+				return types.NewSlice(elemNamed)
+			}
+		}
+
+		return types.NewSlice(c.conver(rType.Elem(), true))
 	case reflect.Struct:
 		fields := []*types.Var{}
 		for i := 0; i < rType.NumField(); i++ {
-			fields = append(fields, types.NewField((token.Pos)(i), nil, rType.Field(i).Name, Conver(rType.Field(i).Type), false))
+			fields = append(fields, types.NewField((token.Pos)(i), nil, rType.Field(i).Name, c.conver(rType.Field(i).Type, true), false))
 		}
 
-		return types.NewStruct(fields, nil)
+		var ret types.Type
+		ret = types.NewStruct(fields, nil)
+
+		if named {
+			ret = c.addNamed(rType.Name(), ret)
+		}
+
+		return ret
 	case reflect.Ptr:
-		return types.NewPointer(Conver(rType.Elem()))
+		if elem := rType.Elem(); elem.Kind() == reflect.Struct {
+			if elemNamed, exist := c.Named[elem.Name()]; exist {
+				return types.NewPointer(elemNamed)
+			}
+		}
+
+		return types.NewPointer(c.conver(rType.Elem(), true))
 	default:
 		panic("do not support this reflect type conver")
 	}
 
 	return nil
+}
+
+func (c *Conver) addNamed(name string, t types.Type) types.Type {
+	ret := types.NewNamed(types.NewTypeName(0, nil, name, t), t, nil)
+	c.Named[name] = ret
+	return ret
 }

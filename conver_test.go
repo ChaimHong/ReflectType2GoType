@@ -1,27 +1,73 @@
 package rtype2gtype
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/ChaimHong/gobuf/parser"
 	"github.com/funny/debug"
+	"go/types"
+	"log"
 	"reflect"
 	"testing"
 )
 
 type B struct {
 	f1 int
-	f2 bool
-	f3 int32
 }
 
+type CINT int
+
+const (
+	CINT_A CINT = 0
+	CINT_B CINT = 1
+
+	INT_A int = 0
+	INT_B int = 1
+)
+
 type A struct {
-	a1 *B
-	a2 []int
-	a3 []byte
-	a4 string
-	a5 byte
+	a4 CINT
 }
 
 func TestConver(t *testing.T) {
-	v := Conver(reflect.TypeOf(A{}))
+	v := NewConver().Conver(reflect.TypeOf(A{}))
+	// v1 := c.Conver(reflect.TypeOf(A{}), false)
+	// v := c.GetTypes(v1, "A")
 	fmt.Printf("%s", debug.Dump(debug.DumpStyle{Format: true, Indent: " "}, "TestConver", v))
+}
+
+func TestParser(t *testing.T) {
+	// var a int = 1
+	// rtype := reflect.TypeOf(a)
+	// fmt.Printf("t %v %v", rtype.String(), rtype.Kind().String())
+	// return
+	v := NewConver().Conver(reflect.TypeOf(A{})).(*types.Struct)
+	log.Printf("doc dump %s", debug.Dump(debug.DumpStyle{Format: true, Indent: " "}, v))
+
+	doc, err := parser.ParseData("main", nil, map[string]*types.Struct{"A": v})
+	if err != nil {
+		panic(err)
+	}
+
+	log.Printf("doc dump %s", debug.Dump(debug.DumpStyle{Format: true, Indent: " "}, doc))
+	return
+	jsonData, err2 := json.MarshalIndent(doc, "", " ")
+
+	log.Printf("json %s %v", jsonData, err2)
+
+}
+
+func TestConst(t *testing.T) {
+	fmt.Printf("%v", reflect.ValueOf(CINT_B).Int())
+
+	v := ConstConver(reflect.ValueOf(CINT_B))
+	fmt.Printf("const %v", v)
+
+	doc, err := parser.ParseData("main", []*types.Const{v}, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	log.Printf("doc dump %s", debug.Dump(debug.DumpStyle{Format: true, Indent: " "}, doc))
+	return
 }
