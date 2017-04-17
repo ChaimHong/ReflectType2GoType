@@ -32,50 +32,42 @@ func (c *Conver) conver(rType reflect.Type, named bool) (ret types.Type) {
 	rk := rType.Kind()
 	switch rType.Kind() {
 	case reflect.Bool:
-		ret = types.Typ[types.Bool]
-		if rType.String() != rk.String() {
-			ret = c.addNamed(rType.Name(), ret)
-		}
-		return
+		return c.converBasic(rType, rk, types.Bool)
 	case reflect.Int:
-		ret = types.Typ[types.Int]
-		if rType.String() != rk.String() {
-			ret = c.addNamed(rType.Name(), ret)
-		}
-		return
-
+		return c.converBasic(rType, rk, types.Int)
 	case reflect.Int8:
-		return types.Typ[types.Int8]
+		return c.converBasic(rType, rk, types.Int8)
 	case reflect.Int16:
-		return types.Typ[types.Int16]
+		return c.converBasic(rType, rk, types.Int16)
+
 	case reflect.Int32:
-		return types.Typ[types.Int32]
+		return c.converBasic(rType, rk, types.Int32)
 	case reflect.Int64:
-		return types.Typ[types.Int64]
+		return c.converBasic(rType, rk, types.Int64)
 	case reflect.Uint:
-		return types.Typ[types.Uint]
+		return c.converBasic(rType, rk, types.Uint)
 	case reflect.Uint8:
-		return types.Typ[types.Uint8]
+		return c.converBasic(rType, rk, types.Uint8)
 	case reflect.Uint16:
-		return types.Typ[types.Uint16]
+		return c.converBasic(rType, rk, types.Uint16)
 	case reflect.Uint32:
-		return types.Typ[types.Uint32]
+		return c.converBasic(rType, rk, types.Uint32)
 	case reflect.Uint64:
-		return types.Typ[types.Uint64]
+		return c.converBasic(rType, rk, types.Uint64)
 	case reflect.Uintptr:
-		return types.Typ[types.Uintptr]
+		return c.converBasic(rType, rk, types.Uintptr)
 	case reflect.Float32:
-		return types.Typ[types.Float32]
+		return c.converBasic(rType, rk, types.Float32)
 	case reflect.Float64:
-		return types.Typ[types.Float64]
+		return c.converBasic(rType, rk, types.Float64)
 	case reflect.Complex64:
-		return types.Typ[types.Complex64]
+		return c.converBasic(rType, rk, types.Complex64)
 	case reflect.Complex128:
-		return types.Typ[types.Complex128]
+		return c.converBasic(rType, rk, types.Complex128)
 	case reflect.String:
-		return types.Typ[types.String]
+		return c.converBasic(rType, rk, types.String)
 	case reflect.UnsafePointer:
-		return types.Typ[types.UnsafePointer]
+		return c.converBasic(rType, rk, types.UnsafePointer)
 
 	case reflect.Array:
 		if elem := rType.Elem(); elem.Kind() == reflect.Struct {
@@ -120,6 +112,15 @@ func (c *Conver) conver(rType reflect.Type, named bool) (ret types.Type) {
 	}
 
 	return nil
+}
+
+func (c *Conver) converBasic(rType reflect.Type, rk reflect.Kind, bk types.BasicKind) (ret types.Type) {
+	ret = types.Typ[bk]
+	if rType.String() != rk.String() {
+		return c.addNamed(rType.Name(), ret)
+	}
+
+	return
 }
 
 func (c *Conver) addNamed(name string, t types.Type) types.Type {

@@ -25,6 +25,21 @@ const (
 	INT_B int = 1
 )
 
+type LoginGroup int
+
+const (
+	LOGIN_GROUP_D LoginGroup = 1 // 项目d
+	LOGIN_GROUP_E LoginGroup = 2
+	LOGIN_GROUP_F LoginGroup = 3
+	LOGIN_GROUP_G LoginGroup = 4
+)
+
+// 玩家登录参数
+type LoginIn struct {
+	User  []byte     // 平台帐号，最大长度100字符
+	Group LoginGroup // 组别
+}
+
 type A struct {
 	a4 CINT
 }
@@ -41,7 +56,7 @@ func TestParser(t *testing.T) {
 	// rtype := reflect.TypeOf(a)
 	// fmt.Printf("t %v %v", rtype.String(), rtype.Kind().String())
 	// return
-	v := NewConver().Conver(reflect.TypeOf(A{})).(*types.Struct)
+	v := NewConver().Conver(reflect.TypeOf(LoginIn{})).(*types.Struct)
 	log.Printf("doc dump %s", debug.Dump(debug.DumpStyle{Format: true, Indent: " "}, v))
 
 	doc, err := parser.ParseData("main", nil, map[string]*types.Struct{"A": v})
@@ -49,8 +64,8 @@ func TestParser(t *testing.T) {
 		panic(err)
 	}
 
-	log.Printf("doc dump %s", debug.Dump(debug.DumpStyle{Format: true, Indent: " "}, doc))
-	return
+	// log.Printf("doc dump %s", debug.Dump(debug.DumpStyle{Format: true, Indent: " "}, doc))
+
 	jsonData, err2 := json.MarshalIndent(doc, "", " ")
 
 	log.Printf("json %s %v", jsonData, err2)
