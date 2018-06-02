@@ -1,13 +1,16 @@
 package rtype2gtype
 
 import (
+	"fmt"
 	"go/token"
 	"go/types"
 	"reflect"
 )
 
 type Conver struct {
-	Named map[string]types.Type
+	Named          map[string]types.Type
+	defaultPkgPath string
+	OtherPkgPath   []string
 }
 
 func NewConver() *Conver {
@@ -18,19 +21,23 @@ func NewConver() *Conver {
 
 func (c *Conver) free() {
 	c.Named = make(map[string]types.Type)
+	c.defaultPkgPath = ""
+	c.OtherPkgPath = []string{}
 }
 
-func (c *Conver) Conver(rType reflect.Type) types.Type {
+func (c *Conver) Conver(rType reflect.Type) (types.Type, []string) {
 	defer func() {
 		c.free()
 	}()
 
-	return c.conver(rType, false)
+	c.defaultPkgPath = rType.PkgPath()
+
+	return c.conver(rType, false), c.OtherPkgPath
 }
 
 func (c *Conver) conver(rType reflect.Type, named bool) (ret types.Type) {
 	rk := rType.Kind()
-	switch rType.Kind() {
+	switch rk {
 	case reflect.Bool:
 		return c.converBasic(rType, rk, types.Bool)
 	case reflect.Int:
@@ -87,6 +94,7 @@ func (c *Conver) conver(rType reflect.Type, named bool) (ret types.Type) {
 		return types.NewSlice(c.conver(rType.Elem(), true))
 	case reflect.Struct:
 		fields := []*types.Var{}
+		// fmt.Printf("rtype %v\n", rType)
 		for i := 0; i < rType.NumField(); i++ {
 			fields = append(fields, types.NewField((token.Pos)(i), nil, rType.Field(i).Name, c.conver(rType.Field(i).Type, true), false))
 		}
@@ -95,7 +103,7 @@ func (c *Conver) conver(rType reflect.Type, named bool) (ret types.Type) {
 		ret = types.NewStruct(fields, nil)
 
 		if named {
-			ret = c.addNamed(rType.Name(), ret)
+			ret = c.addNamed(rType, ret)
 		}
 
 		return ret
@@ -108,7 +116,9 @@ func (c *Conver) conver(rType reflect.Type, named bool) (ret types.Type) {
 
 		return types.NewPointer(c.conver(rType.Elem(), true))
 	default:
-		panic("do not support this reflect type conver")
+		panic(fmt.Sprintf("do not support this reflect type conver %v", rk))
+		// panic("do not support this reflect type conver")
+
 	}
 
 	return nil
@@ -117,13 +127,19 @@ func (c *Conver) conver(rType reflect.Type, named bool) (ret types.Type) {
 func (c *Conver) converBasic(rType reflect.Type, rk reflect.Kind, bk types.BasicKind) (ret types.Type) {
 	ret = types.Typ[bk]
 	if rType.String() != rk.String() {
-		return c.addNamed(rType.Name(), ret)
+		return c.addNamed(rType, ret)
 	}
 
 	return
 }
 
-func (c *Conver) addNamed(name string, t types.Type) types.Type {
+func (c *Conver) addNamed(rType reflect.Type, t types.Type) types.Type {
+	name := rType.Name()
+	if thisPkg := rType.PkgPath(); thisPkg != c.defaultPkgPath {
+		name = rType.String()
+		c.OtherPkgPath = append(c.OtherPkgPath, thisPkg)
+	}
+
 	ret := types.NewNamed(types.NewTypeName(0, nil, name, t), t, nil)
 	c.Named[name] = ret
 	return ret

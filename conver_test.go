@@ -3,6 +3,7 @@ package rtype2gtype
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/ChaimHong/ReflectType2GoType/example"
 	"github.com/ChaimHong/gobuf/parser"
 	"github.com/funny/debug"
 	"go/types"
@@ -36,8 +37,9 @@ const (
 
 // 玩家登录参数
 type LoginIn struct {
-	User  []byte     // 平台帐号，最大长度100字符
-	Group LoginGroup // 组别
+	// User []byte // 平台帐号，最大长度100字符
+	// Group LoginGroup // 组别
+	Other example.A
 }
 
 type A struct {
@@ -45,7 +47,7 @@ type A struct {
 }
 
 func TestConver(t *testing.T) {
-	v := NewConver().Conver(reflect.TypeOf(A{}))
+	v, _ := NewConver().Conver(reflect.TypeOf(A{}))
 	// v1 := c.Conver(reflect.TypeOf(A{}), false)
 	// v := c.GetTypes(v1, "A")
 	fmt.Printf("%s", debug.Dump(debug.DumpStyle{Format: true, Indent: " "}, "TestConver", v))
@@ -56,8 +58,10 @@ func TestParser(t *testing.T) {
 	// rtype := reflect.TypeOf(a)
 	// fmt.Printf("t %v %v", rtype.String(), rtype.Kind().String())
 	// return
-	v := NewConver().Conver(reflect.TypeOf(LoginIn{})).(*types.Struct)
-	log.Printf("doc dump %s", debug.Dump(debug.DumpStyle{Format: true, Indent: " "}, v))
+	v, _ := NewConver().Conver(reflect.TypeOf(LoginIn{})).(*types.Struct)
+
+	return
+	log.Printf("doc dump %s\n", debug.Dump(debug.DumpStyle{Format: true, Indent: " "}, v))
 
 	doc, err := parser.ParseData("main", nil, map[string]*types.Struct{"A": v})
 	if err != nil {
