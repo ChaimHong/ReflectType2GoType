@@ -3,13 +3,15 @@ package rtype2gtype
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/ChaimHong/ReflectType2GoType/example"
-	"github.com/ChaimHong/gobuf/parser"
-	"github.com/funny/debug"
 	"go/types"
 	"log"
 	"reflect"
 	"testing"
+
+	"github.com/ChaimHong/ReflectType2GoType/example"
+	"github.com/ChaimHong/gobuf/parser"
+	"github.com/ChaimHong/util"
+	"github.com/funny/debug"
 )
 
 type B struct {
@@ -58,12 +60,12 @@ func TestParser(t *testing.T) {
 	// rtype := reflect.TypeOf(a)
 	// fmt.Printf("t %v %v", rtype.String(), rtype.Kind().String())
 	// return
-	v, _ := NewConver().Conver(reflect.TypeOf(LoginIn{})).(*types.Struct)
+	typ, _ := NewConver().Conver(reflect.TypeOf(LoginIn{}))
+	v, _ := typ.(*types.Struct)
 
-	return
 	log.Printf("doc dump %s\n", debug.Dump(debug.DumpStyle{Format: true, Indent: " "}, v))
 
-	doc, err := parser.ParseData("main", nil, map[string]*types.Struct{"A": v})
+	doc, err := parser.ParseData("main", nil, map[string]*types.Struct{"A": v}, []string{})
 	if err != nil {
 		panic(err)
 	}
@@ -82,11 +84,47 @@ func TestConst(t *testing.T) {
 	v := ConstConver(reflect.ValueOf(CINT_B))
 	fmt.Printf("const %v", v)
 
-	doc, err := parser.ParseData("main", []*types.Const{v}, nil)
+	doc, err := parser.ParseData("main", []*types.Const{v}, nil, []string{})
 	if err != nil {
 		panic(err)
 	}
 
 	log.Printf("doc dump %s", debug.Dump(debug.DumpStyle{Format: true, Indent: " "}, doc))
 	return
+}
+
+type Raw []byte
+
+type Named struct {
+	A *Raw
+}
+
+func TestNamed(t *testing.T) {
+	{
+		var v []byte
+		typ, _ := NewConver().Conver(reflect.TypeOf(v))
+
+		util.DebugPrintf("t", typ.Underlying(), typ.String())
+
+	}
+
+	{
+		v := Raw{}
+		typ, _ := NewConver().Conver(reflect.TypeOf(v))
+
+		util.DebugPrintf("t", typ.Underlying(), typ.String())
+		return
+	}
+	{
+		typ := types.NewTypeName(0, nil, "Raw", types.NewSlice(types.Typ[types.Byte]))
+		util.DebugPrintf("t", typ.Name(), typ.IsAlias())
+
+		typ2 := types.NewNamed(typ, types.NewSlice(types.Typ[types.Byte]), nil)
+		util.DebugPrintf("typ2", typ2.String(), typ2.Underlying())
+	}
+
+	// {
+	// 	typ, _ := NewConver().Conver(reflect.TypeOf(Named{}))
+	// 	log.Printf("t %#v", typ)
+	// }
 }
