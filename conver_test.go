@@ -1,4 +1,4 @@
-package rtype2gtype
+package rtype2gtype_test
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"testing"
 
+	rtype2gtype "github.com/ChaimHong/ReflectType2GoType"
 	example "github.com/ChaimHong/ReflectType2GoType/example"
 	"github.com/ChaimHong/gobuf/parser"
 	"github.com/funny/debug"
@@ -45,14 +46,14 @@ type A struct {
 }
 
 func TestConver(t *testing.T) {
-	v, _ := NewConver().Conver(reflect.TypeOf(A{}))
+	v, _ := rtype2gtype.NewConver().Conver(reflect.TypeOf(A{}))
 	fmt.Printf("%s", debug.Dump(debug.DumpStyle{Format: true, Indent: " "}, "TestConver", v))
 }
 
 func TestConst(t *testing.T) {
 	fmt.Printf("%v", reflect.ValueOf(CINT_B).Int())
 
-	v := ConstConver(reflect.ValueOf(CINT_B))
+	v := rtype2gtype.ConstConver(reflect.ValueOf(CINT_B))
 	fmt.Printf("const %v", v)
 
 	doc, err := parser.ParseData("main", []*types.Const{v}, nil, nil)
