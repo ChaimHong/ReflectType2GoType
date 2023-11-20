@@ -38,6 +38,4 @@ func ConstConver(rValue reflect.Value) *types.Const {
 	default:
 		panic("do not support this reflect value kind")
 	}
-
-	return nil
 }

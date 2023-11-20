@@ -25,7 +25,7 @@ func (c *Conver) free() {
 	c.OtherPkgPath = []string{}
 }
 
-func (c *Conver) Conver(rType reflect.Type) (typ types.Type, otherPkgs []string) {
+func (c *Conver) Conver(rType reflect.Type) (types.Type, []string) {
 	defer func() {
 		c.free()
 	}()
@@ -85,22 +85,16 @@ func (c *Conver) conver(rType reflect.Type, named bool) (ret types.Type) {
 
 		return types.NewArray(c.conver(rType.Elem(), true), int64(rType.Len()))
 	case reflect.Slice:
-		elem := rType.Elem()
-		if rType.Name() != "" {
-			tt := types.NewSlice(c.conver(elem, true))
-			return types.NewNamed(types.NewTypeName(0, nil, rType.Name(), tt), tt, nil)
-		}
-
-		switch elem.Kind() {
-		case reflect.Struct:
+		if elem := rType.Elem(); elem.Kind() == reflect.Struct {
 			if elemNamed, exist := c.Named[elem.Name()]; exist {
 				return types.NewSlice(elemNamed)
 			}
 		}
 
-		return types.NewSlice(c.conver(elem, true))
+		return types.NewSlice(c.conver(rType.Elem(), true))
 	case reflect.Struct:
 		fields := []*types.Var{}
+		// fmt.Printf("rtype %v\n", rType)
 		for i := 0; i < rType.NumField(); i++ {
 			fields = append(fields, types.NewField((token.Pos)(i), nil, rType.Field(i).Name, c.conver(rType.Field(i).Type, true), false))
 		}
@@ -114,9 +108,7 @@ func (c *Conver) conver(rType reflect.Type, named bool) (ret types.Type) {
 
 		return ret
 	case reflect.Ptr:
-		elem := rType.Elem()
-		switch elem.Kind() {
-		case reflect.Struct:
+		if elem := rType.Elem(); elem.Kind() == reflect.Struct {
 			if elemNamed, exist := c.Named[elem.Name()]; exist {
 				return types.NewPointer(elemNamed)
 			}
@@ -124,8 +116,9 @@ func (c *Conver) conver(rType reflect.Type, named bool) (ret types.Type) {
 
 		return types.NewPointer(c.conver(rType.Elem(), true))
 	default:
-		panic(fmt.Sprintf("do not support this reflect type conver %v", rk))
+		panic(fmt.Sprintf("do not support this reflect type conver %v, %v", rk, rType))
 		// panic("do not support this reflect type conver")
+
 	}
 }
 

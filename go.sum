@@ -1,0 +1,6 @@
+github.com/ChaimHong/gobuf v0.0.0-20180609094436-a4e3ef684791 h1:CJolqGkUKjn36uY0080W4YWDIRWLTb3sWzv/FE5KDww=
+github.com/ChaimHong/gobuf v0.0.0-20180609094436-a4e3ef684791/go.mod h1:Qga48A/Zwh6lUBOou8EzhFTojKjCxKPK0Su2hxjZ2rA=
+github.com/funny/debug v0.0.0-20151207070507-98f9c80ed7b3 h1:V4ZyqtGT2pXART1VRQCkicvuOkOHHQisB0EZ+mYENH8=
+github.com/funny/debug v0.0.0-20151207070507-98f9c80ed7b3/go.mod h1:GsgSiheuqb/rYsP4kCdJcR+ae60W+keISyYJINLPnP8=
+github.com/funny/utest v0.0.0-20161029064919-43870a374500 h1:Z0r1CZnoIWFB/Uiwh1BU5FYmuFe6L5NPi6XWQEmsTRg=
+github.com/funny/utest v0.0.0-20161029064919-43870a374500/go.mod h1:mUn39tBov9jKnTWV1RlOYoNzxdBFHiSzXWdY1FoNGGg=
